@@ -23,6 +23,14 @@ from src.load_models import create_inr_instance, load_inr
 
 @hydra.main(config_path=".", config_name="config_sdf.yaml")
 def main(cfg: DictConfig) -> None:
+    # optional seed (TMLR revision): pass +seed=<int> on the command line
+    _seed = cfg.get("seed", None)
+    if _seed is not None:
+        import random as _random
+        import numpy as _np
+        _random.seed(_seed); _np.random.seed(_seed)
+        torch.manual_seed(_seed); torch.cuda.manual_seed_all(_seed)
+        print(f"Seed set to {_seed}")
     os.environ["WANDB__SERVICE_WAIT"] = "300"
     # —── Setup wandb and device
     wandb.init(

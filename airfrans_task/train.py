@@ -24,6 +24,14 @@ import airfrans as af
 
 @hydra.main(config_path="", config_name="config_out.yaml")
 def main(cfg: DictConfig) -> None:
+    # optional seed (TMLR revision): pass +seed=<int> on the command line
+    _seed = cfg.get("seed", None)
+    if _seed is not None:
+        import random as _random
+        import numpy as _np
+        _random.seed(_seed); _np.random.seed(_seed)
+        torch.manual_seed(_seed); torch.cuda.manual_seed_all(_seed)
+        print(f"Seed set to {_seed}")
     # Initialize wandb
     os.environ["WANDB__SERVICE_WAIT"] = "300"
     wandb.init(project='airfrans_sdf', config=OmegaConf.to_container(cfg, resolve=True))
