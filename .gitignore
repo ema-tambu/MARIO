@@ -13,3 +13,7 @@ trainings
 *.out
 *.slurm
 cd.
+# run logs (TMLR revision)
+*.log
+capture_tmux.txt
+__pycache__/

@@ -69,11 +69,14 @@ def main(cfg: DictConfig) -> None:
     ], lr=cfg.optim.lr_inr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode='min', factor=0.99,
-        patience=200, verbose=True, min_lr=1e-5
+        patience=200, min_lr=1e-5
     )
 
     # —── Training loop
     best_val = float('inf')
+    train_loss_history = []
+    val_loss_history = []
+    val_epochs = []
     for epoch in tqdm(range(cfg.optim.epochs), desc="Epoch"):
         # --- TRAIN ---
         inr_model.train()
@@ -107,6 +110,7 @@ def main(cfg: DictConfig) -> None:
 
         avg_train = train_loss / n_train
         wandb.log({"epoch": epoch, "train_loss": avg_train})
+        train_loss_history.append(avg_train)
 
         # --- VALIDATION every 5 epochs ---
         if epoch % 5 == 0:
@@ -133,6 +137,8 @@ def main(cfg: DictConfig) -> None:
 
             avg_val = val_loss / n_test
             wandb.log({"epoch": epoch, "val_loss": avg_val})
+            val_loss_history.append(avg_val)
+            val_epochs.append(epoch)
             scheduler.step(avg_val)
 
             # save best model checkpoint
@@ -149,7 +155,7 @@ def main(cfg: DictConfig) -> None:
                 )
 
     # —── Extract & Save Modulations from best model ─────────────────────────
-    ckpt = torch.load(results_dir / "best_inr.pt", map_location=device)
+    ckpt = torch.load(results_dir / "best_inr.pt", map_location=device, weights_only=False)
     inr_model = load_inr(ckpt["inr_in"], cfg, cfg.inr.input_dim, cfg.inr.output_dim, device=device)
     inr_model.eval()
 
@@ -185,6 +191,11 @@ def main(cfg: DictConfig) -> None:
     np.savez(mod_dir / f"{cfg.dataset.task}_test_{cfg.inr.latent_dim}.npz",
              val_modulations=test_mods)
     print(f"Saved modulations: train {train_mods.shape}, test {test_mods.shape}")
+    np.savez(results_dir / "loss_history.npz",
+             train_loss=np.array(train_loss_history),
+             val_loss=np.array(val_loss_history),
+             val_epochs=np.array(val_epochs))
+    print(f"Saved loss history: {len(train_loss_history)} train pts, {len(val_loss_history)} val pts")
 
     # —── Finish wandb
     wandb.finish()

@@ -32,7 +32,7 @@ def evaluate(run_dir, device="cuda"):
     if not ckpt_files:
         raise FileNotFoundError("No .pt checkpoint found in run directory")
     ckpt_path = os.path.join(run_dir, ckpt_files[0])
-    checkpoint = torch.load(ckpt_path, map_location=device)
+    checkpoint = torch.load(ckpt_path, map_location=device, weights_only=False)
     print(f"Loaded checkpoint from {ckpt_path}")
 
     # 3) Reload datasets

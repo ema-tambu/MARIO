@@ -1,0 +1,14 @@
+airfrans
+datasets
+hydra-core
+matplotlib
+numpy
+omegaconf
+Pillow
+plaid
+point_cloud_utils
+pyoche
+PyYAML
+scikit_learn
+scipy
+tqdm
